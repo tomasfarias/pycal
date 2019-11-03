@@ -1,30 +1,29 @@
 import datetime as dt
+from typing import Optional, List, Dict, Tuple, Any
 
 from googleapiclient.discovery import build
 
 
 class GoogleCalendar:
-    """
-
-    """
+    """Google Calendar API adapter"""
     def __init__(self, credentials):
         self.service = build('calendar', 'v3', credentials=credentials)
 
-    def get_events(self, start_date=None, end_date=None, calendar_id='primary'):
+    def get_events(
+            self, start_date: Optional[str] = None, end_date: Optional[str] = None,
+            calendar_id: str = 'primary'
+    ) -> List[Optional[dict]]:
         """
-        Get events from calendar API.
+        Get events from calendar.
 
         :param start_date: lower bound (exclusive) for an event's end time to filter by
-        :type start_date: str
         :param end_date: upper bound (exclusive) for an event's start time to filter by
-        :type end_date: str
         :param calendar_id: calendar identifier; defaults to 'primary'
-        :type calendar_id: str
         :return: list of events (dictionaries)
         """
         start_date, end_date = _get_valid_dates(start_date, end_date)
 
-        events = []
+        events: List[Optional[dict]] = []
         next_page_token = None
         while True:
             next_events = self.service.events().list(
@@ -44,16 +43,15 @@ class GoogleCalendar:
 
         return events
 
-    def delete_event(self, event_id, calendar_id='primary', notify=None):
+    def delete_event(
+            self, event_id: str, calendar_id: str = 'primary', notify: Optional[str] = None
+    ) -> bool:
         """
-        Delete an event from calendar API.
+        Delete an event from a calendar.
 
         :param event_id: event identifier
-        :type event_id: str
         :param calendar_id: calendar identifier; defaults to 'primary'
-        :type calendar_id: str
         :type notify: send notifications of deletion. Possible values: 'all', 'externalOnly'.
-        :type calendar_id: str
         :return: list of events (dictionaries)
         """
 
@@ -65,8 +63,36 @@ class GoogleCalendar:
 
         return True
 
+    def insert_event(
+            self, body, calendar_id: str = 'primary', notify: Optional[str] = None,
+            attachments: bool = False, conference_version: int = 0
+    ) -> Dict:
+        """
+        Insert an event into a calendar.
 
-def _get_valid_dates(start_date, end_date):
+        :param body: event identifier
+        :param calendar_id: calendar identifier; defaults to 'primary'
+        :param notify: send notifications of deletion. Possible values: 'all', 'externalOnly'
+            or None.
+        :param attachments: send notifications of deletion. Possible values: 'all',
+            'externalOnly' or None.
+        :param conference_version: send notifications of deletion. Possible values: 'all',
+            'externalOnly' or None.
+        :return: list of events (dictionaries)
+        """
+
+        result = self.service.events().insert(
+            calendarId=calendar_id,
+            body=body,
+            sendUpdates=notify,
+            supportsAttachments=attachments,
+            conferenceDataVersion=conference_version
+        ).execute()
+
+        return result
+
+
+def _get_valid_dates(start_date: Any, end_date: Any) -> Tuple[Optional[str], Optional[str]]:
     """
     Get dates in ISO format. Checks that end_date >= start_date
 

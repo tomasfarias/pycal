@@ -1,1 +1,1 @@
-from pycal.authorizer.authorizer import GoogleAuthorizer
+from pycal.authorizer.authorizer import GoogleAuthorizer  # noqa: F401

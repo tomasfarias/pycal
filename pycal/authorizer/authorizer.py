@@ -1,4 +1,6 @@
 import json
+from pathlib import Path
+from typing import Union
 
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
@@ -6,16 +8,14 @@ from google.oauth2.credentials import Credentials
 
 
 class GoogleAuthorizer:
-    """
-
-    """
-    def __init__(self, credentials_path, config_path):
+    """Handles credential creation and storage"""
+    def __init__(self, credentials_path: Union[str, Path], config_path: Union[str, Path]):
         self.credentials_path = credentials_path
         self.config_path = config_path
         self._credentials = None
 
     @property
-    def credentials(self):
+    def credentials(self) -> Credentials:
         """
         Get refreshed auth token.
 
@@ -33,7 +33,7 @@ class GoogleAuthorizer:
 
         return self._credentials
 
-    def run_installed_app_flow(self):
+    def run_installed_app_flow(self) -> Credentials:
         """
         Opens local browser with login prompt to authorize application
 

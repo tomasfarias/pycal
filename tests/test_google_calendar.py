@@ -1,4 +1,5 @@
 import json
+from operator import attrgetter
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -15,15 +16,13 @@ def calendar():
     return calendar
 
 
-def mock_service_events(calendar, items):
-    calendar \
-        .service \
-        .events \
-        .return_value \
-        .list \
-        .return_value \
-        .execute \
-        .return_value = {'items': items}
+def mock_service_events(calendar, return_value, command):
+    get_command = attrgetter(
+        f'service.events.return_value.{command}.return_value.execute'
+    )
+
+    calendar_command = get_command(calendar)
+    calendar_command.return_value = return_value
 
     return calendar
 
@@ -31,7 +30,7 @@ def mock_service_events(calendar, items):
 def test_get_events(calendar):
     with open('tests/assets/events.json') as fp:
         expected = json.load(fp)
-    calendar = mock_service_events(calendar, expected)
+    calendar = mock_service_events(calendar, {'items': expected}, 'list')
 
     result = calendar.get_events(start_date='2019-10-19 20:10:01', end_date='2019-11-19 20:10:01')
 
@@ -39,7 +38,7 @@ def test_get_events(calendar):
 
 
 def test_get_events_empty(calendar):
-    calendar = mock_service_events(calendar, [])
+    calendar = mock_service_events(calendar, {'items': []}, 'list')
 
     result = calendar.get_events(start_date='2019-10-19 20:10:01', end_date='2019-11-19 20:10:01')
 
@@ -47,8 +46,8 @@ def test_get_events_empty(calendar):
 
 
 def test_delete_event(calendar):
-    calendar = mock_service_events(calendar, [])
+    calendar = mock_service_events(calendar, None, 'delete')
 
-    result = calendar.get_events(start_date='2019-10-19 20:10:01', end_date='2019-11-19 20:10:01')
+    result = calendar.delete_event(event_id='12345')
 
-    assert result == []
+    assert result is True
